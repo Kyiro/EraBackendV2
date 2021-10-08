@@ -601,6 +601,7 @@ dependencies = [
  "actix-web",
  "base64 0.13.0",
  "bcrypt",
+ "bson",
  "chrono",
  "dotenv",
  "jsonwebtoken",
@@ -612,6 +613,7 @@ dependencies = [
  "serde_json",
  "sha-1",
  "sha2",
+ "tokio",
  "uuid",
 ]
 

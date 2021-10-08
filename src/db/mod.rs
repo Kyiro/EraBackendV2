@@ -12,7 +12,7 @@ pub struct Database {
 }
 
 impl Database {
-    pub async fn new(url: &str, app_name: &str) -> Result<Database, Box<dyn error::Error>> {
+    pub async fn new(url: &str, app_name: &str) -> Result<Database, Box<dyn std::error::Error>> {
         let client_options = {
             let mut options = ClientOptions::parse(url).await?;
             
@@ -32,13 +32,50 @@ impl Database {
         })
     }
     
-    pub async fn new_user(&self, display_name: String, password: String) -> Result<Uuid, Box<dyn error::Error>> {
+    pub async fn new_user(&self, login: String, display_name: String, password: String) -> Result<Uuid, Box<dyn std::error::Error>> {
         let uuid = Uuid::new_v4();
         
-        if let Ok(None) = self.users.find_one(
-            bson::doc! { "display_name": display_name.clone() },
+        let login = login.to_lowercase();
+        let display_name = display_name.trim().to_string();
+        let password = password.trim().to_string();
+        
+        for c in login.chars() {
+            if !c.is_alphanumeric() {
+                return Err(Box::new(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "The login can only contain letters and numbers"
+                )))
+            }
+        }
+        
+        if login.len() < 4 {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "The login must be at least 4 characters long"
+            )))
+        }
+        
+        if display_name.len() < 4 {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "The username must be at least 4 characters long"
+            )))
+        }
+        
+        if password.len() < 4 {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "The password must be at least 4 characters long"
+            )))
+        }
+        
+        if let None = self.users.find_one(
+            bson::doc! {
+                "login": login.clone(),
+                "display_name": display_name.clone()
+            },
             None
-        ).await {
+        ).await? {
             self.athena.insert_one(
                 athena::Profile::new(uuid),
                 None
@@ -50,13 +87,13 @@ impl Database {
             ).await?;
             
             self.users.insert_one(
-                user::User::new(uuid, display_name, password),
+                user::User::new(uuid, login, display_name, password),
                 None
             ).await?;
         } else {
             return Err(Box::new(io::Error::new(
                 io::ErrorKind::AlreadyExists,
-                "User already exists or an internal error occured"
+                "User already exists"
             )))
         }
         
