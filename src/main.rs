@@ -1,18 +1,26 @@
 pub mod app;
 pub mod db;
-pub mod middleware;
 pub mod models;
 pub mod utils;
 
 use actix_web::*;
 use std::*;
 
+pub type AppData = web::Data<models::app::AppData>;
 pub const SECRET: &'static str = "khf!J=tr8G(7KU@:";
 
-#[get("/error")]
-pub async fn error(req: HttpRequest) -> impl Responder {
-    HttpResponse::Ok().json(models::error::EpicError::unauthorized(&req))
+pub async fn not_found() -> impl Responder {
+    HttpResponse::NotFound().json(models::error::EpicError::not_found())
 }
+
+#[get("/test")]
+pub async fn validate(req: HttpRequest, app: AppData) -> impl Responder {
+    match app.validate(&req, None).await {
+        Some(()) => HttpResponse::Ok(),
+        None => HttpResponse::Unauthorized()
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().unwrap();
@@ -31,14 +39,13 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(data.clone())
             .service(
-                web::scope("/test")
-                .service(error)
-            )
-            .service(
                 web::scope("/account")
                 .service(app::account::test_create)
                 .service(app::account::test_login)
+                .service(app::account::oauth_token)
             )
+            .service(validate)
+            .default_service(web::to(not_found))
     })
     .bind(format!(
         "0.0.0.0:{}",

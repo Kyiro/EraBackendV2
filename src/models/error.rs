@@ -46,10 +46,44 @@ impl EpicError {
             .error_code("errors.com.epicgames.common.authentication.authentication_failed")
             .numeric_error_code(1032)
             .originating_service("fortnite")
-            .intent("prod-live")
-            .error_message(&("Authentication failed for".to_owned() + &url))
+            .error_message(&("Authentication failed for ".to_owned() + &url))
             .message_vars(vec![url])
-            .finish()
+            .clone()
+    }
+    
+    pub fn permission(perm: String, perm_type: String) -> Self {
+        Self::new()
+            .error_code("errors.com.epicgames.common.missing_permission")
+            .numeric_error_code(1023)
+            .originating_service("fortnite")
+            .error_message(&format!(
+                "Sorry your login does not posses the permissions '{} {}' needed to perform the requested operation",
+                perm,
+                perm_type
+            ))
+            .message_vars(vec![
+                perm,
+                perm_type
+            ])
+            .clone()
+    }
+    
+    pub fn req_method() -> Self {
+        Self::new()
+            .error_code("errors.com.epicgames.common.method_not_allowed")
+            .numeric_error_code(1009)
+            .originating_service("fortnite")
+            .error_message("Sorry the resource you were trying to access cannot be accessed with the HTTP method you used.")
+            .clone()
+    }
+    
+    pub fn not_found() -> Self {
+        Self::new()
+            .error_code("errors.com.epicgames.common.not_found")
+            .numeric_error_code(1004)
+            .originating_service("fortnite")
+            .error_message("Sorry the resource you were trying to find could not be found")
+            .clone()
     }
     
     pub fn error_code(&mut self, msg: &str) -> &mut Self {
@@ -90,9 +124,5 @@ impl EpicError {
     pub fn error(&mut self, msg: &str) -> &mut Self {
         self.error = Some(String::from(msg));
         self
-    }
-    
-    pub fn finish(&self) -> Self {
-        self.clone()
     }
 }

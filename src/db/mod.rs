@@ -71,8 +71,7 @@ impl Database {
         
         if let None = self.users.find_one(
             bson::doc! {
-                "login": login.clone(),
-                "display_name": display_name.clone()
+                "login": login.clone()
             },
             None
         ).await? {

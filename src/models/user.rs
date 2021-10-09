@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: Uuid,
+    pub launcher_token: Uuid,
     pub login: String,
     pub display_name: String,
     pub password: String,
@@ -16,6 +17,7 @@ impl User {
     pub fn new(id: Uuid, login: String, display_name: String, password: String) -> Self {
         Self {
             id,
+            launcher_token: Uuid::new_v4(),
             login,
             display_name,
             password: hash(password.as_str(), DEFAULT_COST).unwrap(),
