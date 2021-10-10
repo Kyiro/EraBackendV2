@@ -39,6 +39,9 @@ impl Database {
         let display_name = display_name.trim().to_string();
         let password = password.trim().to_string();
         
+        // sorry for this spaghetti
+        // i hope danii enjoys it though
+        
         for c in login.chars() {
             if !c.is_alphanumeric() {
                 return Err(Box::new(io::Error::new(
@@ -48,17 +51,17 @@ impl Database {
             }
         }
         
-        if login.len() < 4 {
+        if login.len() < 3 {
             return Err(Box::new(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "The login must be at least 4 characters long"
+                "The login must be at least 3 characters long"
             )))
         }
         
-        if display_name.len() < 4 {
+        if display_name.len() < 2 {
             return Err(Box::new(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "The username must be at least 4 characters long"
+                "The username must be at least 2 characters long"
             )))
         }
         
@@ -69,6 +72,20 @@ impl Database {
             )))
         }
         
+        // check if the display name is taken
+        if let Some(_) = self.users.find_one(
+            bson::doc! {
+                "display_name": display_name.clone()
+            },
+            None
+        ).await? {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::AlreadyExists,
+                "That display name is taken"
+            )))
+        }
+        
+        // check if the login is available
         if let None = self.users.find_one(
             bson::doc! {
                 "login": login.clone()
