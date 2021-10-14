@@ -1,6 +1,6 @@
 use actix_web::*;
 use crate::models::fortnite::account::*;
-use crate::models::error::*;
+use crate::models::errors::*;
 use std::*;
 use serde::{Deserialize, Serialize};
 

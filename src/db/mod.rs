@@ -58,10 +58,10 @@ impl Database {
             )))
         }
         
-        if display_name.len() < 2 {
+        if display_name.len() < 1 {
             return Err(Box::new(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "The username must be at least 2 characters long"
+                "The username must be at least 1 characters long"
             )))
         }
         

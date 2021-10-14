@@ -1,19 +1,20 @@
+use bson::serde_helpers::uuid_as_binary;
 use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 use sha2::{Digest, Sha256};
 use std::*;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CloudStorageEntry {
     // system id is Uuid::nil()
+    #[serde(with = "uuid_as_binary")]
     pub id: Uuid,
-    pub files: Vec<CloudStorageData>
+    pub files: collections::HashMap<String, CloudStorageData>
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CloudStorageData {
-    pub id: Uuid,
     pub filename: String,
     pub hash: String,
     pub hash256: String,
@@ -25,13 +26,13 @@ impl CloudStorageEntry {
     pub fn new(id: Uuid) -> Self {
         Self {
             id,
-            files: Vec::new()
+            files: collections::HashMap::new()
         }
     }
 }
 
 impl CloudStorageData {
-    pub fn new(id: Uuid, filename: String, data: Vec<u8>) -> Self {
+    pub fn new(filename: String, data: Vec<u8>) -> Self {
         let mut sha1 = Sha1::new();
         let mut sha256 = Sha256::new();
         sha1.update(&data);
@@ -40,7 +41,6 @@ impl CloudStorageData {
         let sha256 = sha256.finalize();
 
         CloudStorageData {
-            id,
             filename,
             hash: format!("{:x}", sha1),
             hash256: format!("{:x}", sha256),
@@ -49,7 +49,7 @@ impl CloudStorageData {
         }
     }
     
-    pub fn from_str(id: Uuid, filename: String, data: String) -> Self {
-        Self::new(id, filename, String::into_bytes(data))
+    pub fn from_str(filename: String, data: String) -> Self {
+        Self::new(filename, String::into_bytes(data))
     }
 }

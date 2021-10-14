@@ -78,9 +78,10 @@ impl AppData {
         let user = tokens.get(&token)?;
         
         if let Some(id) = id {
-            if user.acc? == id {
+            if user.acc == Some(id) {
                 return Some(())
             }
+            return None
         }
         
         Some(())

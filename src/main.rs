@@ -10,7 +10,7 @@ pub type AppData = web::Data<models::app::AppData>;
 pub const SECRET: &'static str = "khf!J=tr8G(7KU@:";
 
 pub async fn not_found() -> impl Responder {
-    HttpResponse::NotFound().json(models::error::EpicError::not_found())
+    HttpResponse::NotFound().json(models::errors::EpicError::not_found())
 }
 
 #[get("/test")]
@@ -38,6 +38,12 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
+            .service(
+                web::scope("/fortnite")
+                .service(app::cloudstorage::user)
+                .service(app::cloudstorage::user_file_get)
+                .service(app::cloudstorage::user_file_put)
+            )
             .service(
                 web::scope("/account")
                 .service(app::account::test_create)
