@@ -1,7 +1,8 @@
+use crate::models::{db, files, mcp};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Attributes {
     pub past_seasons: Vec<Value>,
     pub season_match_boost: i32,
@@ -76,4 +77,123 @@ pub struct Variant {
     pub channel: String,
     pub active: String,
     pub owned: Vec<String>,
+}
+
+impl Variant {
+    pub fn new(updates: Vec<Self>, cvariants: Vec<files::Variant>) -> Vec<Self> {
+        let mut variants: Vec<Variant> = Vec::new();
+        
+        for v in cvariants {
+            if &v.channel == "JerseyColor" {
+                continue;
+            }
+            
+            variants.push(Variant {
+                channel: v.channel.clone(),
+                // could be better but works :/
+                active: match updates.iter().find(|u| u.channel == v.channel) {
+                    Some(data) => data.active.clone(),
+                    None => v.options.get(0).unwrap().clone(),
+                },
+                owned: v.options,
+            });
+        }
+        
+        for update in updates.into_iter() {
+            if let None = variants.iter().find(|v| v.channel == update.channel) {
+                variants.push(update);
+            }
+        }
+        
+        variants
+    }
+}
+
+impl mcp::FullProfile {
+    pub fn new_athena(
+        athena: db::athena::Profile,
+        cosmetics: Vec<files::Item>,
+        season: usize,
+        user: db::user::User
+    ) -> Self {
+        let mut full_profile = Self::new(user, "athena");
+        
+        full_profile.profile.stats.attributes = mcp::StatsAttributes::Athena(Attributes {
+            past_seasons: Vec::new(),
+            season_match_boost: 120,
+            mfa_reward_claimed: true,
+            rested_xp_overflow: 0,
+            quest_manager: json!({
+                "dailyLoginInterval": "2021-06-24T11:24:14.414Z",
+                "dailyQuestRerolls": 1
+            }),
+            book_level: 100,
+            season_num: season,
+            book_xp: 999999,
+            permissions: Vec::new(),
+            season: json!({
+                "numWins": 0,
+                "numHighBracket": 0,
+                "numLowBracket": 0
+            }),
+            battlestars: 9999,
+            vote_data: json!({}),
+            book_purchased: true,
+            lifetime_wins: 999,
+            party_assist_quest: String::new(),
+            purchased_battle_pass_tier_offers: json!({}),
+            rested_xp_exchange: 1,
+            level: 100,
+            xp_overflow: 0,
+            rested_xp: 0,
+            rested_xp_mult: 4.55,
+            account_level: 9999,
+            competitive_identity: json!({}),
+            inventory_limit_bonus: 0,
+            daily_rewards: json!({}),
+            xp: 9999999,
+            season_friend_match_boost: 40,
+            // cosmetics
+            favorite_character: athena.locker.character,
+            favorite_backpack: athena.locker.backpack,
+            favorite_pickaxe: athena.locker.pickaxe,
+            favorite_glider: athena.locker.glider,
+            favorite_skydivecontrail: athena.locker.skydivecontrail,
+            favorite_musicpack: athena.locker.musicpack,
+            favorite_loadingscreen: athena.locker.loadingscreen,
+            favorite_dance: athena.locker.dance,
+            favorite_itemwraps: athena.locker.itemwraps,
+            // unused cosmetics
+            favorite_callingcard: String::new(),
+            favorite_consumableemote: String::new(),
+            favorite_spray: Vec::new(),
+            favorite_hat: String::new(),
+            favorite_battlebus: String::new(),
+            favorite_mapmarker: String::new(),
+            favorite_vehicledeco: String::new(),
+            favorite_victorypose: String::new(),
+        });
+        
+        for i in cosmetics {
+            let template = format!("{}:{}", i.item_type, i.id);
+            
+            full_profile.profile.items.insert(
+                template.clone(),
+                mcp::Item::Cosmetic(Cosmetic {
+                    template_id: template.clone(),
+                    attributes: CosmeticAttributes {
+                        max_level_bonus: 0,
+                        level: 1,
+                        item_seen: true,
+                        xp: 0,
+                        variants: Variant::new(Vec::new(), i.variants),
+                        favourite: athena.favourites.contains(&template)
+                    },
+                    quantity: 1
+                })
+            );
+        }
+        
+        full_profile
+    }
 }

@@ -7,7 +7,7 @@ pub struct CloudStorageFile {
     pub id: String,
     #[serde(with = "uuid_as_binary")]
     pub owner: Uuid,
-    pub data: Vec<u8>
+    pub data: bson::Binary
 }
 
 impl CloudStorageFile {
@@ -15,7 +15,10 @@ impl CloudStorageFile {
         Self {
             id,
             owner,
-            data
+            data: bson::Binary {
+                subtype: bson::spec::BinarySubtype::Generic,
+                bytes: data
+            }
         }
     }
 }

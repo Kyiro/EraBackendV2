@@ -73,7 +73,7 @@ pub async fn user_file_get(
         },
         None
     ).await? {
-        return Ok(HttpResponse::Ok().body(file.data))
+        return Ok(HttpResponse::Ok().body(file.data.bytes))
     }
     
     Ok(HttpResponse::NoContent().into())

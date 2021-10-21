@@ -103,7 +103,7 @@ impl Database {
             ).await?;
             
             self.users.insert_one(
-                user::User::new(uuid, login, display_name, password),
+                user::User::new(uuid, login.clone(), display_name, password),
                 None
             ).await?;
         } else {
@@ -112,6 +112,8 @@ impl Database {
                 "User already exists"
             )))
         }
+        
+        log::info!("New Account: {}", login);
         
         Ok(uuid)
     }

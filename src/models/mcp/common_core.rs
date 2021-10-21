@@ -1,7 +1,9 @@
+use chrono::prelude::*;
+use crate::models::{db, mcp};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Attributes {
     pub survey_data: Value,
     pub personal_offers: Value,
@@ -24,4 +26,47 @@ pub struct Attributes {
     pub mfa_enabled: bool,
     pub allowed_to_receive_gifts: bool,
     pub gift_history: Value,
+}
+
+impl mcp::FullProfile {
+    pub fn new_common_core(user: db::user::User) -> Self {
+        let mut full_profile = Self::new(user, "common_core");
+        
+        full_profile.profile.items.insert(
+            String::from("Currency:MtxComplimentary"),
+            mcp::Item::Other(json!({
+                "templateId": "Currency:MtxComplimentary",
+                "attributes": {
+                    "platform": "Shared"
+                },
+                "quantity": 13500
+            }))
+        );
+
+        full_profile.profile.stats.attributes = mcp::StatsAttributes::CommonCore(Attributes {
+            survey_data: json!({}),
+            personal_offers: json!({}),
+            intro_game_played: false,
+            import_friends_claimed: json!({}),
+            mtx_purchase_history: json!({}),
+            undo_cooldowns: Vec::new(),
+            mtx_affiliate_set_time: Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true),
+            inventory_limit_bonus: 0,
+            current_mtx_platform: String::from("EpicPC"),
+            mtx_affiliate: String::from(""),
+            weekly_purchases: json!({}),
+            daily_purchases: json!({}),
+            ban_history: json!({}),
+            in_app_purchases: json!({}),
+            permissions: Vec::new(),
+            undo_timeout: String::from("min"),
+            monthly_purchases: json!({}),
+            allowed_to_send_gifts: true,
+            mfa_enabled: false,
+            allowed_to_receive_gifts: true,
+            gift_history: json!({}),
+        });
+        
+        full_profile
+    }
 }

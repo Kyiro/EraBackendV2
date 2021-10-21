@@ -34,7 +34,8 @@ pub struct AppData {
     pub database: Database,
     pub captcha: Option<HcaptchaClient>,
     pub tokens: sync::RwLock<HashMap<Uuid, Token>>,
-    pub exchange: sync::RwLock<HashMap<Uuid, ExchangeCode>>
+    pub exchange: sync::RwLock<HashMap<Uuid, ExchangeCode>>,
+    pub files: files::Files
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -54,7 +55,8 @@ impl AppData {
             database,
             captcha,
             tokens: sync::RwLock::new(HashMap::new()),
-            exchange: sync::RwLock::new(HashMap::new())
+            exchange: sync::RwLock::new(HashMap::new()),
+            files: files::Files::new()
         }
     }
     
@@ -65,7 +67,7 @@ impl AppData {
     pub async fn login(&self, login: String, password: String) -> Result<db::user::User, Box<dyn std::error::Error>> {
         if let Some(user) = self.database.users.find_one(
             bson::doc! {
-                "login": login
+                "login": login.to_lowercase()
             },
             None
         ).await? {

@@ -27,11 +27,11 @@ pub struct Locker {
     pub backpack: String,
     pub pickaxe: String,
     pub glider: String,
-    pub contrail: String,
-    pub music: String,
-    pub loading: String,
+    pub skydivecontrail: String,
+    pub musicpack: String,
+    pub loadingscreen: String,
     pub dance: [String; 6],
-    pub wrap: [String; 7]
+    pub itemwraps: [String; 7]
 }
 
 impl Default for Locker {
@@ -41,9 +41,9 @@ impl Default for Locker {
             backpack: String::new(),
             pickaxe: String::from("AthenaPickaxe:defaultpickaxe"),
             glider: String::from("AthenaGlider:defaultglider"),
-            contrail: String::from(""),
-            music: String::new(),
-            loading: String::new(),
+            skydivecontrail: String::from(""),
+            musicpack: String::new(),
+            loadingscreen: String::new(),
             dance: [
                 String::new(),
                 String::new(),
@@ -52,7 +52,7 @@ impl Default for Locker {
                 String::new(),
                 String::new(),
             ],
-            wrap: [
+            itemwraps: [
                 String::new(),
                 String::new(),
                 String::new(),

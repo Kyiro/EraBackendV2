@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
     let database = db::Database::new(
         &env::var("MONGODB_URL").expect("MONGODB_URL not found"),
         &env::var("MONGODB_NAME").expect("MONGODB_NAME not found")
-    ).await.unwrap();
+    ).await.expect("Failed to load DB");
     
     let data = models::app::AppData::new_data(database, None);
     
@@ -32,15 +32,38 @@ async fn main() -> std::io::Result<()> {
             .app_data(data.clone())
             .service(
                 web::scope("/account")
-                .service(app::account::test_create)
-                .service(app::account::test_login)
+                .service(app::account::accounts_metadata)
+                .service(app::account::external_auths)
+                .service(app::account::kill_sessions)
+                .service(app::account::kill_sessions_id)
                 .service(app::account::oauth_token)
+                .service(app::account::public_account)
+                .service(app::account::public_account_query)
+                .service(app::account::ssodomains)
+            )
+            .service(
+                web::scope("/content")
+                .service(app::content::fortnite_game)
+                .service(app::content::fortnite_game_)
             )
             .service(
                 web::scope("/fortnite")
                 .service(app::cloudstorage::user)
                 .service(app::cloudstorage::user_file_get)
                 .service(app::cloudstorage::user_file_put)
+                .service(app::fortnite::enabled_features)
+                .service(app::fortnite::find_player)
+                .service(app::fortnite::fortnite_version)
+                .service(app::fortnite::keychain)
+                .service(app::fortnite::play_on_platform)
+                .service(app::fortnite::receipts)
+                .service(app::fortnite::timeline)
+                .service(app::fortnite::twitch)
+                .service(app::fortnite::version_check)
+                .service(app::fortnite::version_check_v2)
+                .service(app::fortnite::world_info)
+                .service(app::mcp::query_profile)
+                .service(app::mcp::other)
             )
             .service(
                 web::scope("/launcher")
@@ -48,6 +71,11 @@ async fn main() -> std::io::Result<()> {
                 .service(app::launcher::form)
                 .service(app::launcher::login)
                 .service(app::launcher::register)
+            )
+            .service(
+                web::scope("/lightswitch")
+                .service(app::lightswitch::bulk_status)
+                .service(app::lightswitch::fortnite_status)
             )
             .default_service(web::to(not_found))
     })

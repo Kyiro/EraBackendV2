@@ -3,7 +3,10 @@ pub mod common_core;
 pub mod common_public;
 pub mod profile0;
 
+use chrono::prelude::*;
+use crate::models::db::user::User;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::*;
 
 #[derive(Serialize, Deserialize)]
@@ -51,7 +54,8 @@ pub struct FullProfileInner {
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Item {
-    CosmeticItem(athena::Cosmetic)
+    Cosmetic(athena::Cosmetic),
+    Other(Value)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -65,5 +69,44 @@ pub enum StatsAttributes {
     Athena(athena::Attributes),
     CommonCore(common_core::Attributes),
     CommonPublic(common_public::Attributes),
-    Profile0(profile0::Attributes)
+    Profile0(profile0::Attributes),
+    Other(Value)
+}
+
+impl Profile {
+    pub fn new(profile_id: String, changes: Vec<ProfileChanges>, rvn: Option<i32>) -> Self {
+        Self {
+            profile_revision: rvn.unwrap_or(1) + 1,
+            profile_id: profile_id,
+            profile_changes_base_revision: rvn.unwrap_or(2),
+            profile_changes: changes,
+            profile_command_revision: rvn.unwrap_or(1) + 1,
+            server_time: Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true),
+            response_version: 1
+        }
+    }
+}
+
+impl FullProfile {
+    pub fn new(user: User, profile_id: &str) -> Self {
+        Self {
+            change_type: String::from("fullProfileUpdate"),
+            profile: FullProfileInner {
+                _id: user.id.to_simple().to_string(),
+                created: user.creation_date.to_chrono()
+                    .to_rfc3339_opts(SecondsFormat::Secs, true),
+                updated: Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true),
+                rvn: 1,
+                wipe_number: 1,
+                account_id: user.id.to_simple().to_string(),
+                profile_id: String::from(profile_id),
+                version: String::from("era-backend"),
+                items: collections::HashMap::new(),
+                stats: Stats {
+                    attributes: StatsAttributes::Other(json!({}))
+                },
+                command_revision: 1
+            }
+        }
+    }
 }

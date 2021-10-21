@@ -1,3 +1,4 @@
+use actix_web::*;
 use regex::Regex;
 use std::*;
 
@@ -16,7 +17,9 @@ pub fn init_logger() {
     pretty_env_logger::init();
 }
 
-pub fn get_build(useragent: &str) -> Option<Build> {
+pub fn get_build(req: &HttpRequest) -> Option<Build> {
+    let useragent = req.headers().get("User-Agent")?.to_str().ok()?;
+    
     let regex = Regex::new(r"[^\w=](\d).(\d{2}|\d{1}).*-(\d{8}|\d{7})|-(\d{7})").ok()?;
     let captures = regex.captures(useragent)?;
 

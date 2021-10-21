@@ -2,37 +2,8 @@ use actix_web::*;
 use crate::models::fortnite::account::*;
 use crate::models::errors::*;
 use std::*;
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize)]
-pub struct TestCreate {
-    login: String,
-    display_name: String,
-    password: String
-}
-
-// TEMP ENDPOINT to register
-#[post("/test_create")]
-pub async fn test_create(
-    app: crate::AppData,
-    body: web::Json<TestCreate>
-) -> Result<impl Responder, Box<dyn std::error::Error>> {
-    let body = body.into_inner();
-    
-    app.database.new_user(body.login, body.display_name, body.password).await?;
-    
-    Ok(HttpResponse::Ok())
-}
-
-// TEMP ENDPOINT to login
-#[post("/test_login")]
-pub async fn test_login(
-    app: crate::AppData
-) -> impl Responder {
-    let token = app.new_token(None, true).await;
-    
-    HttpResponse::Ok().body(token.to_simple().to_string())
-}
+use serde_json::json;
+use uuid::Uuid;
 
 #[post("/api/oauth/token")]
 pub async fn oauth_token(
@@ -44,7 +15,7 @@ pub async fn oauth_token(
     
     match form.grant_type.as_str() {
         "password" => {
-            let login = form.username.unwrap();
+            let login = form.username.unwrap().split("@").collect::<Vec<&str>>()[0].to_string();
             let password = form.password.unwrap();
             
             let user = app.login(login, password).await?;
@@ -52,6 +23,11 @@ pub async fn oauth_token(
             
             Ok(HttpResponse::Ok().json(
                 OAuthToken::new(token, &req, user)
+            ))
+        },
+        "client_credentials" => {
+            Ok(HttpResponse::Ok().json(
+                ClientCredentials::new(uuid::Uuid::nil(), &req)
             ))
         },
         "exchange_code" => {
@@ -93,4 +69,88 @@ pub async fn oauth_token(
                 .error("unsupported_grant_type")
         ))
     }
+}
+
+#[get("/api/public/account/{id}")]
+pub async fn public_account(
+    app: crate::AppData,
+    id: web::Path<Uuid>
+) -> Result<impl Responder, Box<dyn std::error::Error>> {
+    let id = id.into_inner();
+    
+    let user = app.database.users.find_one(
+        bson::doc! {
+            "id": id
+        },
+        None
+    ).await?.ok_or("Can't find user")?;
+    
+    Ok(HttpResponse::Ok().json(json!({
+        "id": id.to_simple().to_string(),
+        "displayName": user.display_name,
+        "name": "Project",
+        "email": user.login + "@erafn.xyz",
+        "failedLoginAttempts": 0,
+        "lastFailedLogin": "2021-01-22T23:00:00.000Z",
+        "lastLogin": "2021-01-22T23:00:00.000Z",
+        "numberOfDisplayNameChanges": 1,
+        "ageGroup": "UNKNOWN",
+        "headless": false,
+        "country": "PL",
+        "lastName": "Era",
+        "preferredLanguage": "en",
+        "lastDisplayNameChange": "2021-01-22T23:00:00.000Z",
+        "canUpdateDisplayName": true,
+        "tfaEnabled": false,
+        "emailVerified": true,
+        "minorVerified": false,
+        "minorExpected": false,
+        "minorStatus": "UNKNOWN"
+    })))
+}
+
+#[get("/api/public/account")]
+pub async fn public_account_query(
+    app: crate::AppData,
+    query: web::Query<PublicAccount>
+) -> Result<impl Responder, Box<dyn std::error::Error>> {
+    let query = query.into_inner();
+    
+    let user = app.database.users.find_one(
+        bson::doc! {
+            "id": query.account_id
+        },
+        None
+    ).await?.ok_or("Can't find user")?;
+    
+    Ok(HttpResponse::Ok().json(json!([{
+        "id": user.id,
+        "displayName": user.display_name,
+        "externalAuths": {}
+    }])))
+}
+
+#[get("/api/public/account/{i}/externalAuths")]
+pub async fn external_auths() -> impl Responder {
+    HttpResponse::Ok().json(Vec::<i8>::new())
+}
+
+#[get("/api/accounts/{i}/metadata")]
+pub async fn accounts_metadata() -> impl Responder {
+    HttpResponse::Ok().json(json!({}))
+}
+
+#[delete("/api/oauth/sessions/kill")]
+pub async fn kill_sessions() -> impl Responder {
+    HttpResponse::NoContent()
+}
+
+#[delete("/api/oauth/sessions/kill/{i}")]
+pub async fn kill_sessions_id() -> impl Responder {
+    HttpResponse::NoContent()
+}
+
+#[get("/api/epicdomains/ssodomains")]
+pub async fn ssodomains() -> impl Responder {
+    HttpResponse::Ok().json(Vec::<i8>::new())
 }
