@@ -13,14 +13,6 @@ pub async fn not_found() -> impl Responder {
     HttpResponse::NotFound().json(models::errors::EpicError::not_found())
 }
 
-#[get("/test")]
-pub async fn validate(req: HttpRequest, app: AppData) -> impl Responder {
-    match app.validate(&req, None).await {
-        Some(()) => HttpResponse::Ok(),
-        None => HttpResponse::Unauthorized()
-    }
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().unwrap();
@@ -33,11 +25,17 @@ async fn main() -> std::io::Result<()> {
         &env::var("MONGODB_NAME").expect("MONGODB_NAME not found")
     ).await.unwrap();
     
-    let data = models::app::AppData::new_data(database);
+    let data = models::app::AppData::new_data(database, None);
     
     HttpServer::new(move || {
         App::new()
             .app_data(data.clone())
+            .service(
+                web::scope("/account")
+                .service(app::account::test_create)
+                .service(app::account::test_login)
+                .service(app::account::oauth_token)
+            )
             .service(
                 web::scope("/fortnite")
                 .service(app::cloudstorage::user)
@@ -45,12 +43,12 @@ async fn main() -> std::io::Result<()> {
                 .service(app::cloudstorage::user_file_put)
             )
             .service(
-                web::scope("/account")
-                .service(app::account::test_create)
-                .service(app::account::test_login)
-                .service(app::account::oauth_token)
+                web::scope("/launcher")
+                .service(app::launcher::exchange)
+                .service(app::launcher::form)
+                .service(app::launcher::login)
+                .service(app::launcher::register)
             )
-            .service(validate)
             .default_service(web::to(not_found))
     })
     .bind(format!(

@@ -31,7 +31,7 @@ pub async fn test_login(
 ) -> impl Responder {
     let token = app.new_token(None, true).await;
     
-    HttpResponse::Ok().body(token.unwrap().to_simple().to_string())
+    HttpResponse::Ok().body(token.to_simple().to_string())
 }
 
 #[post("/api/oauth/token")]
@@ -48,14 +48,41 @@ pub async fn oauth_token(
             let password = form.password.unwrap();
             
             let user = app.login(login, password).await?;
-            let token = app.new_token(Some(user.id), false).await.unwrap();
+            let token = app.new_token(Some(user.id), false).await;
             
-            Ok(
-                HttpResponse::Ok().json(
-                    OAuthToken::new(token, &req, user)
-                )
-            )
-        }
+            Ok(HttpResponse::Ok().json(
+                OAuthToken::new(token, &req, user)
+            ))
+        },
+        "exchange_code" => {
+            let exchange_code = form.exchange_code.unwrap();
+            
+            let code = match app.validate_exchange(exchange_code).await {
+                Some(code) => code,
+                None => return Ok(HttpResponse::Unauthorized().json(
+                    EpicError::new()
+                    .error_code("errors.com.epicgames.account.oauth.exchange_code_not_found")
+                    .error_message("Sorry the exchange code you supplied was not found. It is possible that it was no longer valid")
+                    .message_vars(Vec::new())
+                    .numeric_error_code(18057)
+                    .originating_service("com.epicgames.account.public")
+                    .error_description("Sorry the exchange code you supplied was not found. It is possible that it was no longer valid")
+                    .error("invalid_grant")
+                ))
+            };
+            
+            let user = app.database.users.find_one(
+                bson::doc! {
+                    "id": code.acc
+                },
+                None
+            ).await?.ok_or("Account not found")?;
+            let token = app.new_token(Some(code.acc), false).await;
+            
+            Ok(HttpResponse::Ok().json(
+                OAuthToken::new(token, &req, user)
+            ))
+        },
         _ => Ok(HttpResponse::BadRequest().json(
             EpicError::new()
                 .error_code("errors.com.epicgames.common.oauth.unsupported_grant_type")

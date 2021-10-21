@@ -1,4 +1,4 @@
-use crate::models::cloudstorage;
+use crate::models::db::cloudstorage;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 

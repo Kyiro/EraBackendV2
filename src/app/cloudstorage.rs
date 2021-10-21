@@ -114,7 +114,7 @@ pub async fn user_file_put(
         None
     ).await? {
         app.database.cloudstorage_files.insert_one(
-            cloudstoragefile::CloudStorageFile::new(file.clone(), id, body.clone()),
+            db::cloudstoragefile::CloudStorageFile::new(file.clone(), id, body.clone()),
             None
         ).await?;
     } else {
@@ -142,7 +142,7 @@ pub async fn user_file_put(
         bson::doc! {
             "$set": {
                 "files": {
-                    file_encoded: bson::to_bson(&cloudstorage::CloudStorageData::new(file, body))?
+                    file_encoded: bson::to_bson(&db::cloudstorage::CloudStorageData::new(file, body))?
                 }
             }
         },

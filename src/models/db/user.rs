@@ -7,6 +7,7 @@ use uuid::Uuid;
 pub struct User {
     #[serde(with = "uuid_as_binary")]
     pub id: Uuid,
+    #[serde(with = "uuid_as_binary")]
     pub launcher_token: Uuid,
     pub login: String,
     pub display_name: String,

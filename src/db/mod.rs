@@ -1,4 +1,4 @@
-use crate::models::*;
+use crate::models::db::*;
 use mongodb::{bson, Collection, Client, options::ClientOptions};
 use uuid::Uuid;
 use std::*;

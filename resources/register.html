@@ -1,0 +1,177 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Era - Register</title>
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <script>
+        async function register(form) {
+            if (window.location.href.includes("127.0.0.1")) {
+                await finishRegister();
+            } else {
+                document.getElementById("captcha-popup").style = "display: flex";
+            }
+        }
+        
+        function closePopup(element) {
+            element.style = "display: none";
+        }
+        
+        function form(obj) {
+            let formBody = [];
+            for (const property in obj) {
+                const encodedKey = encodeURIComponent(property);
+                const encodedValue = encodeURIComponent(obj[property]);
+                formBody.push(encodedKey + "=" + encodedValue);
+            }
+            return formBody.join("&");
+        }
+        
+        async function finishRegister(captcha) {
+            const login = document.getElementById("login-input").value;
+            const displayName = document.getElementById("displayname-input").value;
+            const password = document.getElementById("password-input").value;
+            
+            let res = await fetch('/launcher/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                body: form({
+                    'login': login,
+                    'display_name': displayName,
+                    'password': password,
+                    'captcha': captcha
+                })
+            });
+            
+            if (res.status == 200) {
+                window.close();
+                document.getElementById("register-popup").style = "display: flex";
+            } else {
+                alert(await res.text());
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --black: #141414;
+            --white: #cccccc;
+        }
+        
+        * {
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        body {
+            background-color: var(--black);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0px;
+            height: 100%;
+            width: 100%;
+        }
+        
+        input, button {
+            border: 2px solid white;
+            border-radius: 4px;
+            background-color: var(--black);
+            margin: 5px 0px;
+            padding: 5px;
+            width: 500px;
+        }
+        
+        input:focus, button:focus {
+            border: 2px solid white;
+            background-color: var(--white);
+            color: black;
+        }
+        
+        button {
+            width: auto;
+        }
+        
+        @keyframes appear {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .popup {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .box {
+            background-color: var(--black);
+            border-radius: 15px;
+            padding: 5px;
+            box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+        }
+        
+        .appear {
+            animation-name: appear;
+            animation-duration: 1s;
+        }
+        
+        .h-captcha {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="register-popup" class="popup">
+        <div class="box appear">
+            <hr>
+            <p>You can close this window now</p>
+            <hr>
+        </div>
+    </div>
+    
+    <div id="captcha-popup" class="popup">
+        <div class="box appear">
+            <div
+                class="h-captcha"
+                data-sitekey="858cfb80-a4dc-4431-b2c4-037cfd2a0d35"
+                data-theme="dark"
+                data-callback="finishRegister"
+            ></div>
+        </div>
+        <button onclick="closePopup(this.parentElement)">x</button>
+    </div>
+    
+    <form onsubmit="register(this); return false">
+        <h1>Register</h1>
+        <hr>
+        
+        <label>ID</label>
+        <br>
+        <input id="login-input" type="text">
+        <br>
+        <label>Display Name</label>
+        <br>
+        <input id="displayname-input" type="text">
+        <br>
+        <label>Password</label>
+        <br>
+        <input id="password-input" type="password">
+        <hr>
+        <input type="submit" value="Register">
+    </div>
+</body>
+</html>

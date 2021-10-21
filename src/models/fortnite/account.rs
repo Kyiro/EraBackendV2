@@ -9,7 +9,8 @@ pub struct OAuthForm {
     pub grant_type: String,
     pub code: Option<String>,
     pub username: Option<String>,
-    pub password: Option<String>
+    pub password: Option<String>,
+    pub exchange_code: Option<String>
 }
 
 #[derive(Deserialize, Serialize)]
@@ -35,7 +36,7 @@ pub struct OAuthToken {
 }
 
 impl OAuthToken {
-    pub fn new(token: uuid::Uuid, req: &HttpRequest, user: user::User) -> Option<Self> {
+    pub fn new(token: uuid::Uuid, req: &HttpRequest, user: db::user::User) -> Option<Self> {
         let basic = app::get_basic(req)?;
         
         Some(Self {

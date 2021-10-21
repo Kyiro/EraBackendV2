@@ -1,8 +1,10 @@
+use bson::serde_helpers::uuid_as_binary;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Profile {
+    #[serde(with = "uuid_as_binary")]
     pub id: Uuid,
     pub locker: Locker,
     pub favourites: Vec<String>
