@@ -1,1 +1,1 @@
-web: ./target/release/era-backend
+web: ./target/release/era-backend-v2
