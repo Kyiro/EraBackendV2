@@ -156,3 +156,8 @@ pub async fn user_file_put(
 pub async fn system_config() -> impl Responder {
     HttpResponse::NoContent().json(Vec::<i8>::new())
 }
+
+#[get("/api/cloudstorage/system")]
+pub async fn system() -> impl Responder {
+    HttpResponse::Ok().json(Vec::<i8>::new())
+}

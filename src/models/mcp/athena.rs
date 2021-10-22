@@ -2,6 +2,24 @@ use crate::models::{db, files, mcp};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EquipBattleRoyaleCustomization {
+    pub item_to_slot: String,
+    pub slot_name: String,
+    #[serde(rename = "indexWithinSlot")]
+    pub index: Option<usize>,
+    #[serde(rename = "variantUpdates")]
+    pub variants: Option<Vec<Variant>>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SetItemFavoriteStatusBatch {
+    pub item_fav_status: Vec<bool>,
+    pub item_ids: Vec<String>,
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct Attributes {
     pub past_seasons: Vec<Value>,
@@ -162,7 +180,7 @@ impl mcp::FullProfile {
             favorite_musicpack: athena.locker.musicpack,
             favorite_loadingscreen: athena.locker.loadingscreen,
             favorite_dance: athena.locker.dance,
-            favorite_itemwraps: athena.locker.itemwraps,
+            favorite_itemwraps: athena.locker.itemwrap,
             // unused cosmetics
             favorite_callingcard: String::new(),
             favorite_consumableemote: String::new(),

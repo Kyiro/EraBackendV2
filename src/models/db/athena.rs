@@ -31,7 +31,7 @@ pub struct Locker {
     pub musicpack: String,
     pub loadingscreen: String,
     pub dance: [String; 6],
-    pub itemwraps: [String; 7]
+    pub itemwrap: [String; 7]
 }
 
 impl Default for Locker {
@@ -52,7 +52,7 @@ impl Default for Locker {
                 String::new(),
                 String::new(),
             ],
-            itemwraps: [
+            itemwrap: [
                 String::new(),
                 String::new(),
                 String::new(),

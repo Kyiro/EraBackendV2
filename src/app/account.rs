@@ -124,7 +124,7 @@ pub async fn public_account_query(
     ).await?.ok_or("Can't find user")?;
     
     Ok(HttpResponse::Ok().json(json!([{
-        "id": user.id,
+        "id": user.id.to_simple().to_string(),
         "displayName": user.display_name,
         "externalAuths": {}
     }])))

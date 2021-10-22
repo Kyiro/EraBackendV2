@@ -24,7 +24,39 @@ pub struct Profile {
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ProfileChanges {
-    Full(FullProfile)
+    Full(FullProfile),
+    Stat(StatModified),
+    Changed(AttrChanged)
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StatModified {
+    #[serde(rename = "changeType")]
+    pub change_type: String,
+    pub name: String,
+    pub value: StatValue,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StatValue {
+    Vec(Vec<String>),
+    String(String),
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AttrChanged {
+    pub change_type: String,
+    pub item_id: String,
+    pub attribute_name: String,
+    pub attribute_value: Attributes,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Attributes {
+    Bool(bool),
 }
 
 #[derive(Serialize, Deserialize)]

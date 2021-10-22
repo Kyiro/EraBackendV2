@@ -51,6 +51,8 @@ async fn main() -> std::io::Result<()> {
                 .service(app::cloudstorage::user)
                 .service(app::cloudstorage::user_file_get)
                 .service(app::cloudstorage::user_file_put)
+                .service(app::cloudstorage::system)
+                .service(app::cloudstorage::system_config)
                 .service(app::fortnite::enabled_features)
                 .service(app::fortnite::find_player)
                 .service(app::fortnite::fortnite_version)
@@ -63,6 +65,8 @@ async fn main() -> std::io::Result<()> {
                 .service(app::fortnite::version_check_v2)
                 .service(app::fortnite::world_info)
                 .service(app::mcp::query_profile)
+                .service(app::mcp::equip_battle_royale_customization)
+                .service(app::mcp::set_item_favorite_status_batch)
                 .service(app::mcp::other)
             )
             .service(

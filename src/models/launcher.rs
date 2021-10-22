@@ -28,3 +28,24 @@ pub struct RegisterForm {
     pub login: String,
     pub password: String
 }
+
+#[derive(Deserialize, Serialize)]
+pub struct UserSettings {
+    pub display_name: Setting,
+    pub lobby: Setting
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Setting {
+    pub name: String,
+    pub description: String,
+    pub options: Option<Vec<SettingOption>>,
+    pub selected: SettingOption
+}
+
+#[derive(Deserialize, Serialize)]
+pub enum SettingOption {
+    String(String),
+    Int(i32),
+    None
+}
