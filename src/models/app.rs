@@ -1,7 +1,6 @@
 use actix_web::*;
 use crate::db::Database;
 use crate::models::*;
-use hcaptcha::HcaptchaClient;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::*;
@@ -32,7 +31,7 @@ pub fn get_basic(req: &HttpRequest) -> Option<BasicToken> {
 
 pub struct AppData {
     pub database: Database,
-    pub captcha: Option<HcaptchaClient>,
+    pub captcha: Option<captcha::Client>,
     pub tokens: sync::RwLock<HashMap<Uuid, Token>>,
     pub exchange: sync::RwLock<HashMap<Uuid, ExchangeCode>>,
     pub files: files::Files
@@ -50,18 +49,28 @@ pub struct ExchangeCode {
 }
 
 impl AppData {
-    pub fn new(database: Database, captcha: Option<HcaptchaClient>) -> Self {
+    pub fn new(database: Database, include_captcha: bool) -> Self {
+        let mut captcha_ = None;
+        
+        if include_captcha {
+            captcha_ = Some(captcha::Client::new(
+                std::env::var("HCAPTCHA_TOKEN").expect("HCAPTCHA_TOKEN Not Present")
+            ));
+            
+            log::info!("true!");
+        }
+        
         Self {
             database,
-            captcha,
+            captcha: captcha_,
             tokens: sync::RwLock::new(HashMap::new()),
             exchange: sync::RwLock::new(HashMap::new()),
             files: files::Files::new()
         }
     }
     
-    pub fn new_data(database: Database, captcha: Option<HcaptchaClient>) -> crate::AppData {
-        crate::AppData::new(Self::new(database, captcha))
+    pub fn new_data(database: Database, include_captcha: bool) -> crate::AppData {
+        crate::AppData::new(Self::new(database, include_captcha))
     }
     
     pub async fn login(&self, login: String, password: String) -> Result<db::user::User, Box<dyn std::error::Error>> {

@@ -88,11 +88,15 @@ pub async fn register(
 ) -> Result<impl Responder, Box<dyn std::error::Error>> {
     let body = body.into_inner();
     
-    if let Some(_) = &app.captcha {
-        // IMPLEMENT CAPTCHA HERE
+    if let Some(captcha) = &app.captcha {
+        let captcha_res = captcha.verify(body.captcha.ok_or("'captcha' Not Present")?).await?;
+        
+        if !captcha_res.success() {
+            return Ok(HttpResponse::Unauthorized().body("Invalid Captcha"))
+        }
     }
     
     app.database.new_user(body.login, body.display_name, body.password).await?;
     
-    Ok(HttpResponse::Ok())
+    Ok(HttpResponse::Ok().into())
 }

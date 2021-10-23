@@ -7,7 +7,6 @@ use actix_web::*;
 use std::*;
 
 pub type AppData = web::Data<models::app::AppData>;
-pub const SECRET: &'static str = "khf!J=tr8G(7KU@:";
 
 pub async fn not_found() -> impl Responder {
     HttpResponse::NotFound().json(models::errors::EpicError::not_found())
@@ -25,7 +24,9 @@ async fn main() -> std::io::Result<()> {
         &env::var("MONGODB_NAME").expect("MONGODB_NAME not found")
     ).await.expect("Failed to load DB");
     
-    let data = models::app::AppData::new_data(database, None);
+    let data = models::app::AppData::new_data(database,
+        env::var("HCAPTCHA_TOKEN").is_ok()
+    );
     
     HttpServer::new(move || {
         App::new()

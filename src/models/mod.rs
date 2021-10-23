@@ -1,4 +1,5 @@
 pub mod app;
+pub mod captcha;
 pub mod db;
 pub mod errors;
 pub mod files;
