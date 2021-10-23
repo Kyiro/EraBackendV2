@@ -141,12 +141,30 @@ pub async fn accounts_metadata() -> impl Responder {
 }
 
 #[delete("/api/oauth/sessions/kill")]
-pub async fn kill_sessions() -> impl Responder {
+pub async fn kill_sessions(
+    app: crate::AppData,
+    query: web::Query<SessionsKill>,
+    req: HttpRequest
+) -> impl Responder {
+    let query = query.into_inner();
+    
+    match query.kill_type.as_str() {
+        "OTHERS_ACCOUNT_CLIENT_SERVICE" => {
+            app.delete_tokens_req(&req, true).await;
+        },
+        _ => ()
+    };
+    
     HttpResponse::NoContent()
 }
 
-#[delete("/api/oauth/sessions/kill/{i}")]
-pub async fn kill_sessions_id() -> impl Responder {
+#[delete("/api/oauth/sessions/kill/{token}")]
+pub async fn kill_sessions_id(
+    app: crate::AppData,
+    token: web::Path<Uuid>
+) -> impl Responder {
+    let token = token.into_inner();
+    app.delete_token(token).await;
     HttpResponse::NoContent()
 }
 

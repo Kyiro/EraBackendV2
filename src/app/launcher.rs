@@ -65,7 +65,7 @@ pub async fn exchange(
     app: crate::AppData,
     req: HttpRequest
 ) -> impl Responder {
-    let token = match app.validate(&req, None).await {
+    let (_, token) = match app.validate(&req, None).await {
         Some(token) => token,
         None => return HttpResponse::Unauthorized().into()
     };

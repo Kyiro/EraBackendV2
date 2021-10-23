@@ -42,6 +42,12 @@ pub struct PublicAccount {
     pub account_id: Uuid,
 }
 
+#[derive(Deserialize)]
+pub struct SessionsKill {
+    #[serde(rename = "killType")]
+    pub kill_type: String,
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct ClientCredentials {
     pub access_token: String,

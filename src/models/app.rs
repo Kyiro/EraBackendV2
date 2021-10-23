@@ -91,19 +91,19 @@ impl AppData {
         )))
     }
     
-    pub async fn validate(&self, req: &HttpRequest, id: Option<Uuid>) -> Option<Token> {
+    pub async fn validate(&self, req: &HttpRequest, id: Option<Uuid>) -> Option<(Uuid, Token)> {
         let token = Uuid::parse_str(&get_token(req)?).ok()?;
         let tokens = self.tokens.read().await;
         let user = tokens.get(&token)?;
         
         if let Some(id) = id {
             if user.acc == Some(id) {
-                return Some(user.clone())
+                return Some((token, user.clone()))
             }
             return None
         }
         
-        Some(user.clone())
+        Some((token, user.clone()))
     }
     
     pub async fn validate_exchange(&self, exchange_code: String) -> Option<ExchangeCode> {
@@ -119,6 +119,50 @@ impl AppData {
         }
         
         Some(user)
+    }
+    
+    pub async fn delete_token(&self, token: Uuid) {
+        let mut tokens = self.tokens.write().await;
+        
+        tokens.remove(&token);
+    }
+    
+    pub async fn delete_tokens(&self, user: Uuid, exception: Option<Uuid>) {
+        // i guess this is more resourceful?
+        let values = {
+            let tokens = self.tokens.read().await;
+            let mut values = Vec::<Uuid>::new();
+            
+            for (token, data) in tokens.iter() {
+                let token = token.clone();
+                
+                if
+                    data.acc == Some(user) &&
+                    Some(token) != exception
+                {
+                    values.push(token);
+                }
+            }
+            
+            values
+        };
+        
+        let mut tokens = self.tokens.write().await;
+        
+        for value in values {
+            tokens.remove(&value);
+        }
+    }
+    
+    pub async fn delete_tokens_req(&self, req: &HttpRequest, exception: bool) -> Option<()> {
+        let (token, data) = self.validate(req, None).await?;
+        
+        self.delete_tokens(data.acc?, match exception {
+            true => Some(token),
+            false => None
+        }).await;
+        
+        Some(())
     }
     
     pub async fn new_exchange(&self, id: Uuid) -> Uuid {
