@@ -141,9 +141,55 @@ pub async fn user_file_put(
         },
         bson::doc! {
             "$set": {
-                "files": {
-                    file_encoded: bson::to_bson(&db::cloudstorage::CloudStorageData::new(file, body))?
-                }
+                "files.".to_owned() + &file_encoded: bson::to_bson(&db::cloudstorage::CloudStorageData::new(file, body))?
+            }
+        },
+        None
+    ).await?;
+    
+    Ok(HttpResponse::Ok().into())
+}
+
+#[delete("/api/cloudstorage/user/{id}/{file}")]
+pub async fn user_file_delete(
+    app: crate::AppData,
+    req: HttpRequest,
+    path: web::Path<(Uuid, String)>
+) -> Result<impl Responder, Box<dyn std::error::Error>> {
+    let (id, file) = path.into_inner();
+    let file_encoded = base64::encode(file.clone());
+    
+    match app.validate(&req, Some(id)).await {
+        Some(_) => (),
+        None => return Ok(
+            HttpResponse::Unauthorized().json(
+                errors::EpicError::permission(
+                    format!(
+                        "fortnite:cloudstorage:user:{}:{}",
+                        id.to_simple().to_string(),
+                        file.clone()
+                    ),
+                    String::from("DELETE")
+                )
+            )
+        )
+    };
+    
+    app.database.cloudstorage_files.delete_one(
+        bson::doc! {
+            "id": file,
+            "owner": id
+        },
+        None
+    ).await?;
+    
+    app.database.cloudstorage.update_one(
+        bson::doc! {
+            "id": id
+        },
+        bson::doc! {
+            "$unset": {
+                "files.".to_owned() + &file_encoded: {}
             }
         },
         None

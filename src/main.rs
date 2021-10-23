@@ -52,6 +52,7 @@ async fn main() -> std::io::Result<()> {
                 .service(app::cloudstorage::user)
                 .service(app::cloudstorage::user_file_get)
                 .service(app::cloudstorage::user_file_put)
+                .service(app::cloudstorage::user_file_delete)
                 .service(app::cloudstorage::system)
                 .service(app::cloudstorage::system_config)
                 .service(app::fortnite::enabled_features)
