@@ -50,19 +50,19 @@ pub struct ExchangeCode {
 
 impl AppData {
     pub fn new(database: Database, include_captcha: bool) -> Self {
-        let mut captcha_ = None;
+        let mut captcha = None;
         
         if include_captcha {
-            captcha_ = Some(captcha::Client::new(
+            captcha = Some(captcha::Client::new(
                 std::env::var("HCAPTCHA_TOKEN").expect("HCAPTCHA_TOKEN Not Present")
             ));
-            
-            log::info!("true!");
+        } else {
+            log::warn!("Captcha is DISABLED");
         }
         
         Self {
             database,
-            captcha: captcha_,
+            captcha,
             tokens: sync::RwLock::new(HashMap::new()),
             exchange: sync::RwLock::new(HashMap::new()),
             files: files::Files::new()

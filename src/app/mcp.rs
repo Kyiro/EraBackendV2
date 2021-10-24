@@ -123,20 +123,31 @@ pub async fn equip_battle_royale_customization(
         None
     ).await?.ok_or("No Athena")?;
     
-    let slot = match body.slot_name.as_str() {
-        "Character" => &mut user.locker.character,
-        "Dance" => &mut user.locker.dance[idx],
-        "ItemWrap" => &mut user.locker.itemwrap[idx],
-        "Backpack" => &mut user.locker.backpack,
-        "Pickaxe" => &mut user.locker.pickaxe,
-        "Glider" => &mut user.locker.glider,
-        "SkyDiveContrail" => &mut user.locker.skydivecontrail,
-        "MusicPack" => &mut user.locker.musicpack,
-        "LoadingScreen" => &mut user.locker.loadingscreen,
-        _ => &mut user.locker.character,
-    };
-    
-    *slot = body.item_to_slot.clone();
+    // if -1 (or below)
+    if idx < 0 {
+        let wraps = &mut user.locker.itemwrap;
+        
+        for i in 0..wraps.len() {
+            wraps[i] = body.item_to_slot.clone();
+        }
+    } else {
+        let idx = idx as usize;
+        
+        let slot = match body.slot_name.as_str() {
+            "Character" => &mut user.locker.character,
+            "Dance" => &mut user.locker.dance[idx],
+            "ItemWrap" => &mut user.locker.itemwrap[idx],
+            "Backpack" => &mut user.locker.backpack,
+            "Pickaxe" => &mut user.locker.pickaxe,
+            "Glider" => &mut user.locker.glider,
+            "SkyDiveContrail" => &mut user.locker.skydivecontrail,
+            "MusicPack" => &mut user.locker.musicpack,
+            "LoadingScreen" => &mut user.locker.loadingscreen,
+            _ => &mut user.locker.character,
+        };
+        
+        *slot = body.item_to_slot.clone();
+    }
     
     app.database.athena.update_one(
         bson::doc! {
