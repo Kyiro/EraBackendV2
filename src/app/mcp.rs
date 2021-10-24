@@ -1,4 +1,5 @@
 use actix_web::*;
+use crate::models::files::Item;
 use crate::models::mcp::*;
 use crate::models::errors::EpicError;
 use crate::utils;
@@ -103,6 +104,9 @@ pub async fn equip_battle_royale_customization(
     let favorite_slot = if body.slot_name == "ItemWrap" {
         String::from("itemwraps")
     } else { body.slot_name.to_lowercase() };
+    let item = app.files.get_cosmetic(
+        body.item_to_slot.clone()
+    ).unwrap_or(Item::from_body(&body));
     
     let mut changes: Vec<ProfileChanges> = Vec::new();
     
@@ -147,6 +151,29 @@ pub async fn equip_battle_royale_customization(
         };
         
         *slot = body.item_to_slot.clone();
+    }
+    
+    if let Some(variants) = body.variants {
+        if variants.len() != 0 {
+            let variants = athena::Variant::new(variants, item.variants);
+            
+            changes.push(ProfileChanges::Changed(AttrChanged {
+                change_type: String::from("itemAttrChanged"),
+                item_id: body.item_to_slot.clone(),
+                attribute_name: String::from("variants"),
+                attribute_value: Attributes::Variants(variants.clone())
+            }));
+            
+            let slot = match body.slot_name.as_str() {
+                "Character" => &mut user.locker.character_variants,
+                "Backpack" => &mut user.locker.backpack_variants,
+                "Pickaxe" => &mut user.locker.pickaxe_variants,
+                "Glider" => &mut user.locker.glider_variants,
+                _ => &mut user.locker.character_variants,
+            };
+            
+            *slot = variants;
+        }
     }
     
     app.database.athena.update_one(

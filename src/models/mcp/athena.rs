@@ -90,7 +90,7 @@ pub struct CosmeticAttributes {
     pub favourite: bool,
 }
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Variant {
     pub channel: String,
     pub active: String,
@@ -172,15 +172,15 @@ impl mcp::FullProfile {
             xp: 9999999,
             season_friend_match_boost: 40,
             // cosmetics
-            favorite_character: athena.locker.character,
-            favorite_backpack: athena.locker.backpack,
-            favorite_pickaxe: athena.locker.pickaxe,
-            favorite_glider: athena.locker.glider,
-            favorite_skydivecontrail: athena.locker.skydivecontrail,
-            favorite_musicpack: athena.locker.musicpack,
-            favorite_loadingscreen: athena.locker.loadingscreen,
-            favorite_dance: athena.locker.dance,
-            favorite_itemwraps: athena.locker.itemwrap,
+            favorite_character: athena.locker.character.clone(),
+            favorite_backpack: athena.locker.backpack.clone(),
+            favorite_pickaxe: athena.locker.pickaxe.clone(),
+            favorite_glider: athena.locker.glider.clone(),
+            favorite_skydivecontrail: athena.locker.skydivecontrail.clone(),
+            favorite_musicpack: athena.locker.musicpack.clone(),
+            favorite_loadingscreen: athena.locker.loadingscreen.clone(),
+            favorite_dance: athena.locker.dance.clone(),
+            favorite_itemwraps: athena.locker.itemwrap.clone(),
             // unused cosmetics
             favorite_callingcard: String::new(),
             favorite_consumableemote: String::new(),
@@ -194,6 +194,20 @@ impl mcp::FullProfile {
         
         for i in cosmetics {
             let template = format!("{}:{}", i.item_type, i.id);
+            let variants = {
+                // maybe clean this up some day?
+                let mut variants = Vec::<Variant>::new();
+                
+                if let Some(item) = athena.locker.get(&i.item_type) {
+                    if item == &template {
+                        if let Some(item_variants) = athena.locker.get_variants(&i.item_type) {
+                            variants = item_variants.clone();
+                        }
+                    }
+                }
+                
+                variants
+            };
             
             full_profile.profile.items.insert(
                 template.clone(),
@@ -204,7 +218,7 @@ impl mcp::FullProfile {
                         level: 1,
                         item_seen: true,
                         xp: 0,
-                        variants: Variant::new(Vec::new(), i.variants),
+                        variants: Variant::new(variants, i.variants),
                         favourite: athena.favourites.contains(&template)
                     },
                     quantity: 1

@@ -1,3 +1,4 @@
+use crate::models::mcp::athena;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::fs;
@@ -16,6 +17,20 @@ impl Files {
             keychain: keychain()
         }
     }
+    
+    pub fn get_cosmetic(&self, template: String) -> Option<Item> {
+        let template = template.split(":").collect::<Vec<&str>>();
+        let item_type = *template.get(0)?;
+        let id = *template.get(1)?;
+        
+        for cosmetic in &self.cosmetics {
+            if cosmetic.id == id && cosmetic.item_type == item_type {
+                return Some(cosmetic.clone())
+            }
+        }
+        
+        None
+    }
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -24,6 +39,18 @@ pub struct Item {
     pub item_type: String,
     pub id: String,
     pub variants: Vec<Variant>,
+}
+
+impl Item {
+    pub fn from_body(body: &athena::EquipBattleRoyaleCustomization) -> Self {
+        let item_type = format!("Athena{}", body.slot_name);
+        
+        Self {
+            item_type,
+            id: body.item_to_slot.clone(),
+            variants: Vec::new()
+        }
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]

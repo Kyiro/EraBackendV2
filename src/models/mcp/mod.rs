@@ -57,6 +57,7 @@ pub struct AttrChanged {
 #[serde(untagged)]
 pub enum Attributes {
     Bool(bool),
+    Variants(Vec<athena::Variant>)
 }
 
 #[derive(Serialize, Deserialize)]
